@@ -17,7 +17,7 @@ app.post("/uploads",uploads.single("pdf"),(req,res)=>{
 })
 
 app.get("/pdf/:name",(req,res)=>{
-    const filePath = Path.join(__dirname,"uploads",req.params.name);
+    const filePath = path.join(__dirname,"uploads",req.params.name);
     res.sendFile(filePath);
 })
 app.listen(4000,()=>{

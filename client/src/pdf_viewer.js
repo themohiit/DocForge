@@ -20,37 +20,47 @@ const PdfViewer = () => {
   };
   
   const renderPdf = async () => {
-    const file = await pdfjsLib.getDocument(fileUrl).promise;
-    const page = await file.getPage(1);
-    const viewport = page.getViewport({ scale: 1.5 });
-    const canvas = await document.getElementById("pdf-canvas");
-    const context = canvas.getContext("2d");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    await page.render({
-      canvasContext: context,
-      viewport: viewport,
-    }).promise;
-    const textContent = await page.getTextContent();
-    console.log(textContent);
-    const convertY = (pdfY) => viewport.height - pdfY;
-    const textItem = textContent.items.map(item=>{
-      const [a,b,c,d,x,y] = item.transform;
-      return{
-        text:item.str,
-        x,
-        y:viewport.height-y,
-        fontSize:item.height,
-      };
-    });
-    textItem.forEach(item=>{
-      context.strikeStyle="red";
-      context.strokeRect(item.x,item.y-item.fontSize,item.text.length*8,item.fontSize);
-    })
-    console.log(textItem);
-    
+  const loadingTask = pdfjsLib.getDocument(fileUrl);
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(1);
+  
+  const viewport = page.getViewport({ scale: 1.5 });
+  const canvas = document.getElementById("pdf-canvas");
+  const context = canvas.getContext("2d");
+  
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
 
-  };
+  // 1. Render the PDF page first
+  await page.render({
+    canvasContext: context,
+    viewport: viewport,
+  }).promise;
+
+  // 2. Get text content
+  const textContent = await page.getTextContent();
+  
+  context.strokeStyle = "red";
+  context.lineWidth = 1;
+
+  textContent.items.forEach((item) => {
+    // item.transform contains [scaleX, skewX, skewY, scaleY, tx, ty]
+    const tx = item.transform[4];
+    const ty = item.transform[5];
+
+    // Convert PDF coordinates (bottom-left) to Canvas coordinates (top-left)
+    // We use the item's height to find the top of the text
+    const [x, y] = viewport.convertToViewportPoint(tx, ty);
+    
+    // Scale the width and height according to the viewport
+    const width = item.width * viewport.scale;
+    const height = item.height * viewport.scale;
+
+    // Draw the rectangle 
+    // Note: y in viewport is the baseline, so we subtract height to draw from top
+    context.strokeRect(x, y - height, width, height);
+  });
+};
 
   return (
     <div>

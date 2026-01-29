@@ -2,30 +2,53 @@ import React, { useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Stage, Layer, Rect, Text } from "react-konva";
 
+// Ensure worker is loaded
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 const PdfViewer = () => {
   const [fileUrl, setFileUrl] = useState(null);
+  const [fileName, setFileName] = useState(""); // Track filename for backend
   const [textItems, setTextItems] = useState([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [editingText, setEditingText] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const canvasRef = useRef(null);
 
-  const uploadFile = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setFileUrl(url);
-    }
-  };
+  const uploadFile = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // 1. Prepare for Backend Upload
+  const formData = new FormData();
+  formData.append('pdf', file);
+
+  try {
+    // 2. Send file to backend /uploads folder
+    const response = await fetch('http://localhost:5000/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    
+    // 3. If successful, prepare for local rendering
+    setFileName(data.fileName);
+    const url = URL.createObjectURL(file);
+    setFileUrl(url);
+    console.log("File uploaded and ready for editing");
+  } catch (err) {
+    console.error("Upload failed", err);
+    alert("Could not upload file to server.");
+  }
+};
 
   const getSafeFont = (pdfFontName) => {
-  if (!pdfFontName) return "sans-serif";
-  const name = pdfFontName.toLowerCase();
-  if (name.includes("serif") && !name.includes("sans")) return "serif";
-  if (name.includes("mono") || name.includes("courier")) return "monospace";
-  return "sans-serif";
-};
+    if (!pdfFontName) return "sans-serif";
+    const name = pdfFontName.toLowerCase();
+    if (name.includes("serif") && !name.includes("sans")) return "serif";
+    if (name.includes("mono") || name.includes("courier")) return "monospace";
+    return "sans-serif";
+  };
+
   const renderPdf = async () => {
     if (!fileUrl) return;
     const loadingTask = pdfjsLib.getDocument(fileUrl);
@@ -42,36 +65,77 @@ const PdfViewer = () => {
     await page.render({ canvasContext: context, viewport }).promise;
 
     const textContent = await page.getTextContent();
-    const styles = textContent.styles; // This is the dictionary of font metadata
-    console.log(styles);
+    const styles = textContent.styles;
+    
     const items = textContent.items.map((item) => {
       const [x, y] = viewport.convertToViewportPoint(item.transform[4], item.transform[5]);
       const fontStyle = styles[item.fontName];
 
-      // PDF.js Y is often the baseline. 
-      // We subtract height to get the "top", but adding a tiny 
-      // buffer (approx 10% of height) often fixes the "too high" issue.
       const calculatedHeight = item.height * viewport.scale;
-      const yOffset = calculatedHeight * 0.1; // Small buffer adjust
+      const yOffset = calculatedHeight * 0.1;
 
       return {
-        id: Math.random().toString(36).substr(2, 9), // Unique ID for easier mapping
+        id: Math.random().toString(36).substr(2, 9),
         text: item.str,
-        originalText: item.str, // Store original to detect changes
+        originalText: item.str,
         x: x,
         y: y - calculatedHeight + yOffset,
         width: item.width * viewport.scale,
-        height: item.height * viewport.scale,
+        height: calculatedHeight,
         fontSize: item.height * viewport.scale,
-
-          // NEW: Store the exact CSS font-family from the PDF
         fontFamily: fontStyle ? fontStyle.fontFamily : "sans-serif",
-        // Optional: capture if the font is bold or italic from the transform matrix
         fontWeight: item.transform[0] !== item.transform[3] ? "bold" : "normal",
         fontName: item.fontName
       };
     });
     setTextItems(items);
+  };
+
+  // --- NEW: PHASE 4 BACKEND INTEGRATION ---
+  const savePdf = async () => {
+    const editedItems = textItems.filter(item => item.text !== item.originalText);
+    console.log(textItems);
+    if (editedItems.length === 0) {
+      alert("No changes detected!");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/save-pdf', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          fileName: fileName,
+          edits: editedItems.map(item => ({
+            page: 1, // Currently supporting page 1
+            x: item.x,
+            y: item.y,
+            newText: item.text,
+            fontSize: item.fontSize,
+            width: item.width,
+            height: item.height
+          }))
+        })
+      });
+
+      const data = await response.json();
+      if (data.downloadUrl) {
+        // Automatically trigger download
+        const link = document.createElement('a');
+        link.href = data.downloadUrl;
+        link.setAttribute('download', `edited_${fileName}`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Error saving PDF. Is the backend running?");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleBlur = (newValue) => {
@@ -83,71 +147,66 @@ const PdfViewer = () => {
     setEditingText(null);
   };
 
-  // ... (keep your imports and state as they are)
-
   return (
-    <div style={{ padding: "20px" }}>
-      <input type="file" onChange={uploadFile} accept="application/pdf" />
-      <button onClick={renderPdf}>Render & Analyze</button>
+    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+      <h2>PDF Visual Editor</h2>
+      <div style={{ marginBottom: "10px" }}>
+        <input type="file" onChange={uploadFile} accept="application/pdf" />
+        <button onClick={renderPdf} disabled={!fileUrl}>Render PDF</button>
+        <button 
+          onClick={savePdf} 
+          disabled={isSaving || textItems.length === 0}
+          style={{ marginLeft: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", padding: "5px 15px", cursor: "pointer" }}
+        >
+          {isSaving ? "Processing..." : "Export & Download PDF"}
+        </button>
+      </div>
 
-      {/* CRITICAL: Ensure this container is relative so the absolute 
-         children (Canvas, Stage, Input) stay aligned to the PDF.
-      */}
-      <div style={{ position: "relative", marginTop: "20px", display: "inline-block" }}>
-        
-        {/* Layer 1: PDF Background */}
-        <canvas ref={canvasRef} style={{ border: "1px solid #ccc", display: "block" }} />
+      <div style={{ position: "relative", border: "2px solid #333", display: "inline-block" }}>
+        <canvas ref={canvasRef} style={{ display: "block" }} />
 
-        {/* Layer 2: Konva Interactive Layer */}
         <Stage 
           width={dimensions.width} 
           height={dimensions.height} 
-          style={{ position: "absolute", top: 0, left: 0, zIndex: 10 }} // zIndex 10
+          style={{ position: "absolute", top: 0, left: 0, zIndex: 10 }}
         >
           <Layer>
             {textItems.map((item) => {
               const isEdited = item.text !== item.originalText;
               return (
                 <React.Fragment key={item.id}>
-                  {/* The White Patch */}
                   {isEdited && (
                     <Rect 
                       x={item.x} 
                       y={item.y} 
                       width={item.width} 
-                      height={item.height*1.25} 
+                      height={item.height} 
                       fill="white" 
                     />
                   )}
 
-                  {/* The Clickable Hitbox */}
                   <Rect
                     x={item.x}
                     y={item.y}
                     width={item.width}
-                    height={item.height+2}
-                    fill="transparent"
-                    onClick={() => {
-                      console.log("Setting editing text for:", item); // Debug Log
-                      setEditingText(item);
-                    }}
+                    height={item.height}
+                    fill={isEdited ? "transparent" : "rgba(0, 120, 255, 0.05)"}
+                    stroke={isEdited ? "transparent" : "transparent"}
+                    strokeWidth={1}
+                    onClick={() => setEditingText(item)}
                     onMouseEnter={(e) => (e.target.getStage().container().style.cursor = "text")}
                     onMouseLeave={(e) => (e.target.getStage().container().style.cursor = "default")}
                   />
 
-                  {/* The Updated Text */}
                   {isEdited && (
                     <Text
                       x={item.x}
                       y={item.y}
                       text={item.text}
-                      // width={editingText.width} 
-                      // height={editingText.height}
                       fontSize={item.fontSize}
-                      fontWeight={item.fontWeight}    
-                      fontFamily={`${item.fontName}, ${getSafeFont(item.fontName)}`}
+                      fontFamily="Helvetica, Arial, sans-serif"
                       fill="black"
-                      listening={false} // Important: clicks pass through this
+                      listening={false}
                     />
                   )}
                 </React.Fragment>
@@ -156,41 +215,31 @@ const PdfViewer = () => {
           </Layer>
         </Stage>
 
-        {/* Layer 3: The HTML Input Box */}
         {editingText && (
           <input
-            key={editingText.id} // Forces re-render when switching items
             style={{
               position: "absolute",
               top: editingText.y,
               left: editingText.x,
-              width: editingText.width || "20px",
-              height: Math.max(editingText.height,20),
+              width: editingText.width,
+              height: editingText.height,
               fontSize: `${editingText.fontSize}px`,
-              fontFamily:editingText.fontFamily,
-              fontStyle:editingText.fontStyle,
-              border: "2px solid #000000ff", // Thicker blue border
-              zIndex: 1000, // Much higher than the Stage
-              outline: "none",
+              fontFamily: "sans-serif",
+              zIndex: 1000,
+              outline: "2px solid #0078ff",
               background: "white",
               padding: 0,
               margin: 0,
-              color: "black",
-              display: "block"
             }}
             defaultValue={editingText.text}
             autoFocus
             onBlur={(e) => handleBlur(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {handleBlur(e.target.value)
-                
-              };
-              if (e.key === "Escape") setEditingText(null);
-            }}
+            onKeyDown={(e) => e.key === "Enter" && handleBlur(e.target.value)}
           />
         )}
       </div>
     </div>
   );
 };
+
 export default PdfViewer;

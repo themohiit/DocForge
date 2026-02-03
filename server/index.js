@@ -51,8 +51,8 @@ app.post('/api/save-pdf', async (req, res) => {
 
     // 3. Process Edits
     for (const edit of edits) {
-      const { page: pageNum, x, y, newText, fontSize, width, height } = edit;
-      
+      const { page: pageNum, x, y, newText, fontSize, width, height, } = edit;
+      console.log(y);
       // pdf-lib is 0-indexed
       const page = pages[pageNum - 1]; 
       const { height: pageHeight } = page.getSize();
@@ -63,13 +63,15 @@ app.post('/api/save-pdf', async (req, res) => {
        * pdf-lib (Backend) treats (0,0) as Bottom-Left.
        * * Formula: Backend_Y = PageHeight - Frontend_Y - ElementHeight
        */
-      const backendY = pageHeight - y - height;
+    const scale = 1.5;  
+    const pdfX = x / scale;
+    const backendY = ( pageHeight - y) / scale;
     // const backendY = y;
 
       // Draw white rectangle to "erase" old text
       page.drawRectangle({
-        x: x,
-        y: backendY,
+        x: pdfX,
+        y: y,
         width: width,
         height: height, // Small buffer to ensure coverage
         color: rgb(1, 1, 1), // White
@@ -77,8 +79,9 @@ app.post('/api/save-pdf', async (req, res) => {
 
       // Draw the new text
       page.drawText(newText, {
-        x: x,
-        y: backendY + (height * 0.1), // Slight adjustment for baseline
+        x: pdfX,
+        // y: backendY + (height * 0.1), // Slight adjustment for baseline
+        y:y,
         size: fontSize,
         font: helveticaFont,
         color: rgb(0, 0, 0), // Black

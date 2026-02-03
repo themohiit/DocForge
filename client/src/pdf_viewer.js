@@ -6,6 +6,7 @@ import { Stage, Layer, Rect, Text } from "react-konva";
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 const PdfViewer = () => {
+  const viewportHeightRef = useRef(0);
   const [fileUrl, setFileUrl] = useState(null);
   const [fileName, setFileName] = useState(""); // Track filename for backend
   const [textItems, setTextItems] = useState([]);
@@ -48,14 +49,15 @@ const PdfViewer = () => {
     if (name.includes("mono") || name.includes("courier")) return "monospace";
     return "sans-serif";
   };
-
+  
   const renderPdf = async () => {
     if (!fileUrl) return;
     const loadingTask = pdfjsLib.getDocument(fileUrl);
     const pdf = await loadingTask.promise;
     const page = await pdf.getPage(1);
     const viewport = page.getViewport({ scale: 1.5 });
-    
+    viewportHeightRef.current = viewport.height;
+
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     setDimensions({ width: viewport.width, height: viewport.height });
@@ -103,6 +105,7 @@ const PdfViewer = () => {
     setIsSaving(true);
 
     try {
+      console.log(viewportHeightRef);
       const response = await fetch('http://localhost:5000/api/save-pdf', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -111,7 +114,7 @@ const PdfViewer = () => {
           edits: editedItems.map(item => ({
             page: 1, // Currently supporting page 1
             x: item.x,
-            y: item.y,
+            y:  (viewportHeightRef.current - item.y)/1.5,
             newText: item.text,
             fontSize: item.fontSize,
             width: item.width,

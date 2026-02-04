@@ -6,7 +6,9 @@ import { Stage, Layer, Rect, Text } from "react-konva";
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 const PdfViewer = () => {
+  const viewportRef = useRef(0);
   const viewportHeightRef = useRef(0);
+  const viewportWidhtRef = useRef(0);
   const [fileUrl, setFileUrl] = useState(null);
   const [fileName, setFileName] = useState(""); // Track filename for backend
   const [textItems, setTextItems] = useState([]);
@@ -57,7 +59,9 @@ const PdfViewer = () => {
     const page = await pdf.getPage(1);
     const viewport = page.getViewport({ scale: 1.5 });
     viewportHeightRef.current = viewport.height;
-
+    viewportWidhtRef.current = viewport.width;
+    viewportRef.current = viewport.scale;
+   
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     setDimensions({ width: viewport.width, height: viewport.height });
@@ -72,7 +76,8 @@ const PdfViewer = () => {
     const items = textContent.items.map((item) => {
       const [x, y] = viewport.convertToViewportPoint(item.transform[4], item.transform[5]);
       const fontStyle = styles[item.fontName];
-
+      const fontSize = item.transform[0]; 
+      const scaledFontSize = fontSize * viewport.scale;
       const calculatedHeight = item.height * viewport.scale;
       const yOffset = calculatedHeight * 0.1;
 
@@ -81,7 +86,7 @@ const PdfViewer = () => {
         text: item.str,
         originalText: item.str,
         x: x,
-        y: y - calculatedHeight + yOffset,
+        y: y - scaledFontSize,
         width: item.width * viewport.scale,
         height: calculatedHeight,
         fontSize: item.height * viewport.scale,
@@ -96,7 +101,7 @@ const PdfViewer = () => {
   // --- NEW: PHASE 4 BACKEND INTEGRATION ---
   const savePdf = async () => {
     const editedItems = textItems.filter(item => item.text !== item.originalText);
-    console.log(textItems);
+    
     if (editedItems.length === 0) {
       alert("No changes detected!");
       return;
@@ -105,7 +110,7 @@ const PdfViewer = () => {
     setIsSaving(true);
 
     try {
-      console.log(viewportHeightRef);
+     
       const response = await fetch('http://localhost:5000/api/save-pdf', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -113,12 +118,12 @@ const PdfViewer = () => {
           fileName: fileName,
           edits: editedItems.map(item => ({
             page: 1, // Currently supporting page 1
-            x: item.x,
-            y:  (viewportHeightRef.current - item.y)/1.5,
+            x: item.x/Number(viewportRef.current),
+            y: (viewportHeightRef.current - (item.y + item.height)) /1.5,
             newText: item.text,
-            fontSize: item.fontSize,
-            width: item.width,
-            height: item.height
+            fontSize: item.fontSize/Number(viewportRef.current),
+            width: item.width/Number(viewportRef.current),
+            height: item.height/Number(viewportRef.current)
           }))
         })
       });

@@ -8,7 +8,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.vers
 const PdfViewer = () => {
   const viewportRef = useRef(0);
   const viewportHeightRef = useRef(0);
-  const viewportWidhtRef = useRef(0);
   const [fileUrl, setFileUrl] = useState(null);
   const [fileName, setFileName] = useState(""); // Track filename for backend
   const [textItems, setTextItems] = useState([]);
@@ -59,7 +58,7 @@ const PdfViewer = () => {
     const page = await pdf.getPage(1);
     const viewport = page.getViewport({ scale: 1.5 });
     viewportHeightRef.current = viewport.height;
-    viewportWidhtRef.current = viewport.width;
+   
     viewportRef.current = viewport.scale;
    
     const canvas = canvasRef.current;

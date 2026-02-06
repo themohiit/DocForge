@@ -52,7 +52,7 @@ app.post('/api/save-pdf', async (req, res) => {
     // 3. Process Edits
     for (const edit of edits) {
       const { page: pageNum, x, y, newText, fontSize, width, height, fontFamily } = edit;
-      
+      console.log(fontFamily)
       // pdf-lib is 0-indexed
       const page = pages[pageNum - 1]; 
       const { height: pageHeight } = page.getSize();
@@ -80,7 +80,7 @@ app.post('/api/save-pdf', async (req, res) => {
         // y: backendY + (height * 0.1), // Slight adjustment for baseline
         y:y,
         size: fontSize,
-        
+
         fontFamily: fontFamily,
         color: rgb(0, 0, 0), // Black
       });

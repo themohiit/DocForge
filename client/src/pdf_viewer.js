@@ -120,7 +120,7 @@ const PdfViewer = () => {
             x: item.x/Number(viewportRef.current),
             y: (viewportHeightRef.current - (item.y + item.height)) /1.5,
             newText: item.text,
-            fontFamily: getSafeFont(item.fontFamily),
+            fontFamily: item.fontFamily ? item.fontFamily: getSafeFont(item.fontFamily),
             fontSize: item.fontSize/Number(viewportRef.current),
             width: item.width/Number(viewportRef.current),
             height: item.height/Number(viewportRef.current)
@@ -224,26 +224,35 @@ const PdfViewer = () => {
         </Stage>
 
         {editingText && (
-          <input
+          // Replace <input /> with this for a more "natural" feel
+          <span
+            contentEditable
+            suppressContentEditableWarning
             style={{
               position: "absolute",
               top: editingText.y,
               left: editingText.x,
-              width: editingText.width,
-              height: editingText.height,
+              minWidth: `${editingText.width}px`, // Starts at original width
+              height: `${editingText.height}px`,
               fontSize: `${editingText.fontSize}px`,
-              fontFamily: "sans-serif",
-              zIndex: 1000,
-              outline: "2px solid #0078ff",
+              fontFamily: editingText.fontFamily,
+              fontWeight: editingText.fontWeight,
+              fontName: editingText.fontName,
               background: "white",
-              padding: 0,
-              margin: 0,
+              outline: "1px solid black",
+              zIndex: 1000,
+              whiteSpace: "nowrap",
             }}
-            defaultValue={editingText.text}
-            autoFocus
-            onBlur={(e) => handleBlur(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleBlur(e.target.value)}
-          />
+            onBlur={(e) => handleBlur(e.currentTarget.textContent)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleBlur(e.currentTarget.textContent);
+              }
+            }}
+          >
+            {editingText.text}
+          </span>
         )}
       </div>
     </div>

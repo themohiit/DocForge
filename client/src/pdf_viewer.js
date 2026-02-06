@@ -120,6 +120,7 @@ const PdfViewer = () => {
             x: item.x/Number(viewportRef.current),
             y: (viewportHeightRef.current - (item.y + item.height)) /1.5,
             newText: item.text,
+            fontFamily: getSafeFont(item.fontFamily),
             fontSize: item.fontSize/Number(viewportRef.current),
             width: item.width/Number(viewportRef.current),
             height: item.height/Number(viewportRef.current)

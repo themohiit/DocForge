@@ -51,7 +51,7 @@ app.post('/api/save-pdf', async (req, res) => {
 
     // 3. Process Edits
     for (const edit of edits) {
-      const { page: pageNum, x, y, newText, fontSize, width, height, } = edit;
+      const { page: pageNum, x, y, newText, fontSize, width, height, fontFamily } = edit;
       
       // pdf-lib is 0-indexed
       const page = pages[pageNum - 1]; 
@@ -69,6 +69,7 @@ app.post('/api/save-pdf', async (req, res) => {
         x: x,
         y: y,
         width: width,
+        
         height: height, // Small buffer to ensure coverage
         color: rgb(1, 1, 1), // White
       });
@@ -79,7 +80,8 @@ app.post('/api/save-pdf', async (req, res) => {
         // y: backendY + (height * 0.1), // Slight adjustment for baseline
         y:y,
         size: fontSize,
-        font: helveticaFont,
+        
+        fontFamily: fontFamily,
         color: rgb(0, 0, 0), // Black
       });
     }

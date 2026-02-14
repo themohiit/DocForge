@@ -56,23 +56,38 @@ app.post('/api/save-pdf', async (req, res) => {
       // pdf-lib is 0-indexed
       const page = pages[pageNum - 1]; 
       const { height: pageHeight } = page.getSize();
-
+      console.log(fontSize)
+      const heightBuffer = height * 0.2; 
+      const totalHeight = height + heightBuffer;
       /**
        * COORDINATE CONVERSION:
        * PDF.js (Frontend) treats (0,0) as Top-Left.
        * pdf-lib (Backend) treats (0,0) as Bottom-Left.
        * * Formula: Backend_Y = PageHeight - Frontend_Y - ElementHeight
        */
-   
+      
       // Draw white rectangle to "erase" old text
-      page.drawRectangle({
+      if(fontSize<=14){
+        page.drawRectangle({
         x: x,
-        y: y,
+        y: y-3,
         width: width,
         
+        
         height: height, // Small buffer to ensure coverage
-        color: rgb(1, 1, 1), // White
+        color: rgb(1,1,1), // White
+      });}
+      else{
+        page.drawRectangle({
+        x: x,
+        y: y-3,
+        width: width,
+        
+        
+        height: height, // Small buffer to ensure coverage
+        color: rgb(1,1,1), // White
       });
+      }
 
       // Draw the new text
       page.drawText(newText, {

@@ -225,21 +225,30 @@ const PdfViewer :React.FC = () => {
         };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <h2>PDF Visual Editor</h2>
-      <div style={{ marginBottom: "10px" }}>
-        <input type="file" onChange={uploadFile} accept="application/pdf" />
-        <button onClick={renderPdf} disabled={!fileUrl}>Render PDF</button>
+    <div className="p-5 font-sans text-gray-800 w-[60vw]">
+      <h2 className="text-2xl font-bold mb-4 text-white">PDF Editor</h2>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <input type="file" className="block text-sm text-gray-600 
+                 file:mr-4 file:py-2 file:px-4 
+                 file:rounded-md file:border-0 
+                 file:text-sm file:font-semibold 
+                 file:bg-blue-50 file:text-blue-700 
+                 hover:file:bg-blue-100 cursor-pointer" onChange={uploadFile} accept="application/pdf" />
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium 
+                 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 
+                 disabled:cursor-not-allowed transition-colors" onClick={renderPdf} disabled={!fileUrl}>Render PDF</button>
         <button 
           onClick={savePdf} 
           disabled={isSaving || textItems.length === 0}
-          style={{ marginLeft: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", padding: "5px 15px", cursor: "pointer" }}
+          className="px-4 py-2 bg-green-500 text-white rounded-md font-medium 
+                 hover:bg-green-600 disabled:bg-gray-300 disabled:text-gray-500 
+                 disabled:cursor-not-allowed transition-colors"
         >
           {isSaving ? "Processing..." : "Export & Download PDF"}
         </button>
       </div>
 
-      <div style={{ position: "relative", border: "2px solid #333", display: "inline-block" }}>
+      <div className="relative border-2 border-gray-800  rounded-sm shadow-sm overflow-x-scroll max-w-[60vw] items-center justify-center flex">
         <canvas ref={canvasRef} style={{ display: "block" }} />
 
         <Stage 
@@ -309,7 +318,7 @@ const PdfViewer :React.FC = () => {
               top: editingText.y,
               left: editingText.x,
               minWidth: `${editingText.width}px`, // Starts at original width
-              height: `${editingText.height}px`,
+              height: `${editingText.height+10}px`,
               fontSize: `${editingText.fontSize}px`,
               fontFamily: editingText.fontFamily,
               fontWeight: editingText.fontWeight,
@@ -319,6 +328,7 @@ const PdfViewer :React.FC = () => {
               zIndex: 1000,
               padding: "0px 0px 10px 0px",
               whiteSpace: "nowrap",
+              // overflow: "hidden",
             }}
             onBlur={(e) => handleBlur(e.currentTarget.textContent)}
             onKeyDown={(e:React.KeyboardEvent<HTMLSpanElement>) => {

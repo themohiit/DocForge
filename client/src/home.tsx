@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { motion } from 'framer-motion'
 import Card from './card'
 import type { Variants } from 'framer-motion'

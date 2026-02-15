@@ -71,7 +71,7 @@ const PdfViewer :React.FC = () => {
 
   try {
     // 2. Send file to backend /uploads folder
-    const response = await fetch('http://localhost:5000/api/upload', {
+    const response = await fetch('https://docforge-1.onrender.com//api/upload', {
       method: 'POST',
       body: formData,
     });

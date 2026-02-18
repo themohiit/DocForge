@@ -8,42 +8,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// For this demo, we assume the original PDFs are stored in an 'uploads' folder
-// In production, you might use S3 or a temporary buffer
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-const OUTPUT_DIR = path.join(__dirname, 'output');
-
 const multer = require('multer');
 
 // Configure how to store uploaded files
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => cb(null, file.originalname)
-});
+const storage = multer.memoryStorage(); // Store files in memory for easy access istead of diskstorage
 const upload = multer({ storage });
 
-// NEW: Endpoint to receive the file from frontend
-app.post('/api/upload', upload.single('pdf'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  res.json({ message: "File uploaded successfully", fileName: req.file.originalname });
-});
-
-[UPLOADS_DIR, OUTPUT_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-});
-
-app.post('/api/save-pdf', async (req, res) => {
+app.post('/api/save-pdf', upload.single('pdf'), async (req, res) => {
   try {
-    const { fileName, edits } = req.body;
-    const filePath = path.join(UPLOADS_DIR, fileName);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "Original file not found" });
+    if(!req.file) {
+      return res.status(400).json({ error: "No PDF file uploaded" });
     }
 
-    // 1. Load the original PDF
-    const existingPdfBytes = fs.readFileSync(filePath);
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    const pdfBuffer = req.file.buffer;
+    const edits = JSON.parse(req.body.edits);
+
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
     const pages = pdfDoc.getPages();
     
     // 2. Embed the Standard Font (Helvetica)
@@ -103,25 +83,17 @@ app.post('/api/save-pdf', async (req, res) => {
 
     // 4. Save and return file
     const pdfBytes = await pdfDoc.save();
-    const outputFileName = `edited_${Date.now()}_${fileName}`;
-    const outputPath = path.join(OUTPUT_DIR, outputFileName);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=edited.pdf`);
     
-    fs.writeFileSync(outputPath, pdfBytes);
-
-    // Provide the URL for download
-    res.json({ 
-      message: "PDF Processed", 
-      downloadUrl: `http://localhost:5000/download/${outputFileName}` 
-    });
-
+    // Convert Uint8Array to Buffer for Express res.send
+    res.send(Buffer.from(pdfBytes));
   } catch (error) {
    
     res.status(500).json({ error: "Failed to process PDF" });
   }
 });
 
-// Serve the edited files
-app.use('/download', express.static(OUTPUT_DIR));
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

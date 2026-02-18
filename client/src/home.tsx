@@ -47,11 +47,11 @@ function Home() {
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card feature='Merge PDF' description='Lorem ipsum dolor sit amet...' link='/mergepdf'/>
+          <Card feature='Merge PDF' description='Lorem ipsum dolor sit amet...' link='/mergepdf'  button='Coming soon...'/>
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card feature='PDF to Word' description='Lorem ipsum dolor sit amet...' link='/pdftoword'/>
+          <Card feature='PDF to Word' description='Lorem ipsum dolor sit amet...' link='/pdftoword' button='Coming soon...'/>
         </motion.div>
       </motion.div>
     </div>

@@ -1,8 +1,8 @@
 import React, { useState, useRef, type ChangeEvent } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Stage, Layer, Rect, Text } from "react-konva";
-
-import type { KonvaEventObject } from "konva/lib/Node";
+oimport type { KonvaEventObject } from "konva/lib/Node";
+import { form } from "framer-motion/client";
 
 // Ensure worker is loaded
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -40,13 +40,26 @@ const PdfViewer :React.FC = () => {
   const editSpanRef = useRef<HTMLSpanElement | null>(null);
   const viewportRef = useRef<Number>(1.5);
   const viewportHeightRef = useRef<Number>(0);
-  const [fileUrl, setFileUrl] = useState<String|null>(null);
+  const [fileUrl, setFileUrl] = useState<string|null>(null);
   const [fileName, setFileName] = useState<String>(""); // Track filename for backend
   const [textItems, setTextItems] = useState<TextItem[]>([]);
   const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
   const [editingText, setEditingText] = useState<TextItem|null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement|null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
+
+
+  useEffect(() => {
+  if (fileUrl) {
+    renderPdf();
+  }
+  // Cleanup the URL when the component unmounts or fileUrl changes
+  return () => {
+    if (fileUrl) URL.revokeObjectURL(fileUrl);
+  };
+}, [fileUrl]);
+
 
   React.useEffect(() => {
   if (editingText && editSpanRef.current) {
@@ -61,31 +74,23 @@ const PdfViewer :React.FC = () => {
     sel?.addRange(range);
   }
 }, [editingText]);
-  const uploadFile = async (e:ChangeEvent<HTMLInputElement>) => {
+
+
+  const uploadFile = async (e: ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
-  // 1. Prepare for Backend Upload
-  const formData = new FormData();
-  formData.append('pdf', file);
+  // 1. Store the actual File object in a ref or state to use later for Export
+  setOriginalFile(file); 
 
-  try {
-    // 2. Send file to backend /uploads folder
-    const response = await fetch('https://docforge-1.onrender.com//api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await response.json();
-    
-    // 3. If successful, prepare for local rendering
-    setFileName(data.fileName);
-    const url = URL.createObjectURL(file);
-    setFileUrl(url);
-    console.log("File uploaded and ready for editing");
-  } catch (err) {
-    console.error("Upload failed", err);
-    alert("Could not upload file to server.");
-  }
+  // 2. Create a local URL for PDF.js to read
+  const url = URL.createObjectURL(file);
+  setFileUrl(url);
+
+  // 3. (Optional) Clear old data
+  setTextItems([]);
+  
+  console.log("File loaded locally for editing");
 };
 
   const getSafeFont = (pdfFontName:string) => {
@@ -162,6 +167,10 @@ const PdfViewer :React.FC = () => {
       alert("No changes detected!");
       return;
     }
+    if (!originalFile) {
+    alert("Original file missing. Please re-upload.");
+    return;
+  }
 
     setIsSaving(true);
 
@@ -169,6 +178,7 @@ const PdfViewer :React.FC = () => {
         const edits:SaveEdit[]= editedItems.map((item:any) => ({
             page: 1, // Currently supporting page 1
             x: item.x/Number(viewportRef.current),
+            // Backend Y calculation: PageHeight - Frontend_Y - ElementHeight
             y: (Number(viewportHeightRef.current) - (item.y + item.height)) /Number(viewportRef.current),
             newText: item.text,
             fontFamily: item.fontFamily ? item.fontFamily: getSafeFont(item.fontFamily),
@@ -176,25 +186,30 @@ const PdfViewer :React.FC = () => {
             width: item.width/Number(viewportRef.current),
             height: (item.height)/Number(viewportRef.current)
           }))
+
+          // 1. Use FormData instead of a JSON body
+            const formData = new FormData();
+            formData.append('pdf', originalFile); // The File object from your state
+            formData.append('edits', JSON.stringify(edits)); // The edit data as a string
+
       const response = await fetch('http://localhost:5000/api/save-pdf', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          fileName,
-          edits
-        })
+        
+        body: formData,
       });
 
-      const data = await response.json();
-      if (data.downloadUrl) {
-        // Automatically trigger download
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const newtab = window.open(downloadUrl, '_blank');
+      if(!newtab){
         const link = document.createElement('a');
-        link.href = data.downloadUrl;
-        link.setAttribute('download', `edited_${fileName}`);
-        document.body.appendChild(link);
+        link.href =downloadUrl;
+        link.download = `edited_${originalFile.name}.pdf`;
         link.click();
-        link.remove();
+
       }
+       setTimeout(() => URL.revokeObjectURL(downloadUrl), 10000);
     } catch (err) {
       console.error("Save failed:", err);
       alert("Error saving PDF. Is the backend running?");
@@ -225,7 +240,7 @@ const PdfViewer :React.FC = () => {
         };
 
   return (
-    <div className="p-5 font-sans text-gray-800 w-[60vw]">
+    <div className="p-5 mt-14 font-sans text-gray-800 w-[60vw]">
       <h2 className="text-2xl font-bold mb-4 text-white">PDF Editor</h2>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <input type="file" className="block text-sm text-gray-600 
@@ -248,7 +263,7 @@ const PdfViewer :React.FC = () => {
         </button>
       </div>
 
-      <div className="relative border-2 border-gray-800  rounded-sm shadow-sm overflow-x-scroll max-w-[60vw] items-center justify-center flex">
+      <div className="relative border-2 border-gray-800  rounded-sm shadow-sm overflow-x-auto ">
         <canvas ref={canvasRef} style={{ display: "block" }} />
 
         <Stage 

@@ -10,7 +10,7 @@ function App() {
     <Router>
         <div className='bg-black'>
         <Navbar/>
-        <main className="min-h-screen  pt-14 flex flex-col items-center justify-start">
+        <main className="min-h-screen  pt-5 flex flex-col items-center justify-start">
         <Routes>
           <Route path="/" element={<Home/>}/>
           <Route path="/editpdf" element={<PdfViewer />} />

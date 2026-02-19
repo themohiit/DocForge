@@ -1,4 +1,5 @@
-import React, { useState, useRef, type ChangeEvent,useEffect } from "react";
+import React, { useState, useRef,useEffect } from "react";
+import type { ChangeEvent } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Stage, Layer, Rect, Text } from "react-konva";
 import type { KonvaEventObject } from "konva/lib/Node";

@@ -1,7 +1,8 @@
 import { Route, BrowserRouter as Router,Routes } from 'react-router-dom'
-import PdfViewer from './PdfViewer'
 import Navbar from './navbar'
 import Home from './home'
+import PdfViewer from './features/PdfViewer'
+import CompressPDF from './features/compresspdf'
 
 function App() {
  
@@ -14,7 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home/>}/>
           <Route path="/editpdf" element={<PdfViewer />} />
-          <Route path="/compresspdf" element={<div>Compress PDF Page</div>} />
+          <Route path="/compresspdf" element={<CompressPDF />} />
         </Routes>
 
         </main>

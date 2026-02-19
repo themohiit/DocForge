@@ -1,8 +1,8 @@
-import React, { useState, useRef, type ChangeEvent } from "react";
+import React, { useState, useRef, type ChangeEvent,useEffect } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Stage, Layer, Rect, Text } from "react-konva";
-oimport type { KonvaEventObject } from "konva/lib/Node";
-import { form } from "framer-motion/client";
+import type { KonvaEventObject } from "konva/lib/Node";
+
 
 // Ensure worker is loaded
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -41,7 +41,7 @@ const PdfViewer :React.FC = () => {
   const viewportRef = useRef<Number>(1.5);
   const viewportHeightRef = useRef<Number>(0);
   const [fileUrl, setFileUrl] = useState<string|null>(null);
-  const [fileName, setFileName] = useState<String>(""); // Track filename for backend
+
   const [textItems, setTextItems] = useState<TextItem[]>([]);
   const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
   const [editingText, setEditingText] = useState<TextItem|null>(null);

@@ -1,8 +1,8 @@
-import React, { useState, useRef,useEffect } from "react";
+import { useState, useRef,useEffect } from "react";
+import * as React from "react";
 import type { ChangeEvent } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import { Stage, Layer, Rect, Text } from "react-konva";
-import type { KonvaEventObject } from "konva/lib/Node";
+
 
 
 // Ensure worker is loaded
@@ -137,6 +137,7 @@ const PdfViewer :React.FC = () => {
       const scaledFontSize = fontSize * viewport.scale;
       const calculatedHeight = item.height * viewport.scale;
       const fontName = item.fontName.toLowerCase();
+      console.log(item);
       const isBold = fontName.includes("bold") || 
                  fontName.includes("black") || 
                  fontName.includes("heavy") || 
@@ -153,7 +154,7 @@ const PdfViewer :React.FC = () => {
         height: calculatedHeight,
         fontSize: item.height * viewport.scale,
         fontFamily: fontStyle ? fontStyle.fontFamily : "sans-serif",
-        fontWeight: isBold ? "bold" : "bold",
+        fontWeight: isBold ? "bold" : "normal",
         fontName: item.fontName
       };
     });
@@ -228,17 +229,17 @@ const PdfViewer :React.FC = () => {
     setEditingText(null);
   };
 
-    const handleMouseEnter =(e:KonvaEventObject<MouseEvent>) => {
-        const container = e.target.getStage()?.container();
-        if(container)
-        container.style.cursor = "text";
-        };
+    // const handleMouseEnter =(e:<MouseEvent>) => {
+    //     const container = e.target.getStage()?.container();
+    //     if(container)
+    //     container.style.cursor = "text";
+    //     };
 
-    const handleMouseLeave =(e:KonvaEventObject<MouseEvent>) => {
-        const container = e.target.getStage()?.container();
-        if(container)
-        container.style.cursor = "default";
-        };
+    // const handleMouseLeave =(e:KonvaEventObject<MouseEvent>) => {
+    //     const container = e.target.getStage()?.container();
+    //     if(container)
+    //     container.style.cursor = "default";
+    //     };
 
   return (
     <div className="p-5 mt-14 font-sans text-gray-800 w-[60vw]">
@@ -264,64 +265,72 @@ const PdfViewer :React.FC = () => {
         </button>
       </div>
 
-      <div className="relative border-2 border-gray-800  rounded-sm shadow-sm overflow-x-auto ">
+      <div className="relative border-2 border-gray-800  rounded-sm shadow-sm ">
         <canvas ref={canvasRef} style={{ display: "block" }} />
 
-        <Stage 
-          width={dimensions.width} 
-          height={dimensions.height} 
-          style={{ position: "absolute", top: 0, left: 0, zIndex: 10 }}
-        >
-          <Layer>
+
+          {/* 2. Replace Konva Stage with a standard SVG */}
+          <svg
+            width={dimensions.width}
+            height={dimensions.height}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              zIndex: 10,
+              // pointerEvents: "none", // Allows clicking through empty space
+            }}
+          >
             {textItems.map((item) => {
-              const isEdited = item.text !== item.originalText;
+              const isEdited = item.text.trim() !== item.originalText.trim();
+              
               return (
-                <React.Fragment key={item.id}>
+                <g key={item.id} style={{ pointerEvents: "auto", cursor: "text" }}>
+                  {/* White background block for edited text */}
                   {isEdited && (
-                    <Rect 
-                      x={item.x} 
-                      y={item.y} 
-                      width={item.width} 
-                      height={item.height+7} 
-                      fill="white" 
+                    <rect
+                      x={item.x}
+                      y={item.y}
+                      width={item.width}
+                      height={item.height + 7}
+                      fill="white"
                     />
                   )}
 
-                  <Rect
+                  
+
+                  {/* The Actual Text */}
+                  {isEdited && (
+                    <text
+                      x={item.x}
+                      y={item.y + item.height} // SVG text anchors at the bottom-left baseline
+                      fontSize={item.fontSize}
+                      fontFamily="sans-serif"
+                      fontWeight={item.fontWeight}
+                      fill="black"
+                    >
+                      {item.text}
+                    </text>
+
+
+                  )}
+
+                  {/* The Clickable Hitbox */}
+                  <rect
                     x={item.x}
                     y={item.y}
                     width={item.width}
                     height={item.height}
-                    fill={isEdited ? "blue" : "rgba(0, 120, 255, 0.05)"}
-                    stroke={isEdited ? "transparent" : "transparent"}
-                    strokeWidth={1}
-                    onClick={() => {
-                        setEditingText(item)
-                        console.log(`fontfamily: ${item.fontFamily},
-                             fontsize:${item.fontSize},
-                             fontweight: ${item.fontWeight}`)
-                    }}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
+                    fill={isEdited ? "transparent" : "transparent"}
+                    onClick={() => setEditingText(item)}
+                    style={{ cursor: 'text', pointerEvents: 'all' }}
                   />
-
-                  {isEdited && (
-                    <Text
-                      x={item.x}
-                      y={item.y}
-                      text={item.text}
-                      fontSize={item.fontSize}
-                      fontFamily= 'sans-serif'
-                      fontWeight= 'bold'
-                      fill="black"
-                      listening={false}
-                    />
-                  )}
-                </React.Fragment>
+                </g>
               );
             })}
-          </Layer>
-        </Stage>
+          </svg>
+
+        
 
         {editingText && (
           // Replace <input /> with this for a more "natural" feel
@@ -340,7 +349,8 @@ const PdfViewer :React.FC = () => {
               fontWeight: editingText.fontWeight,
               background: "white",
               color: "black",
-              outline: "1px solid black",
+              // outline: "1px solid black",
+              outline:"none",
               zIndex: 1000,
               padding: "0px 0px 10px 0px",
               whiteSpace: "nowrap",
@@ -350,13 +360,14 @@ const PdfViewer :React.FC = () => {
             onKeyDown={(e:React.KeyboardEvent<HTMLSpanElement>) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                handleBlur(e.currentTarget.textContent);
+                e.currentTarget.blur();
               }
             }}
           >
             {editingText.text}
           </span>
         )}
+       
       </div>
     </div>
   );

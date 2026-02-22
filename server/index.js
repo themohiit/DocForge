@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const multer = require('multer');
+const compressorHandler = require('./controller/compressor.js');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -19,12 +20,12 @@ const upload = multer({ storage });
 
 app.post('/api/save-pdf', upload.single('pdf'),editorController);
 
-
+// app.post('/api/compress-pdf', upload.single('pdf'), compressorHandler); // Will implement after editor completion and docker knowledge acquisition
 app.post('/api/compress-pdf', upload.single('pdf'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
-
+  const pdfBuffer = req.file.buffer;
   // Simulate compression by just returning the original file (for demonstration)
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', 'attachment; filename="compressed.pdf"');

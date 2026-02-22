@@ -292,7 +292,7 @@ const PdfViewer :React.FC = () => {
                     y={item.y}
                     width={item.width}
                     height={item.height}
-                    fill={isEdited ? "transparent" : "rgba(0, 120, 255, 0.05)"}
+                    fill={isEdited ? "blue" : "rgba(0, 120, 255, 0.05)"}
                     stroke={isEdited ? "transparent" : "transparent"}
                     strokeWidth={1}
                     onClick={() => {

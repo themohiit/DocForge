@@ -13,12 +13,34 @@ async function editorController(req, res) {
         const pages = pdfDoc.getPages();
         
         // 2. Embed the Standard Font (Helvetica)
-        const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    
-        // 3. Process Edits
+       
         for (const edit of edits) {
-          const { page: pageNum, x, y, newText, fontSize, width, height, fontFamily } = edit;
-          console.log(fontFamily)
+          const { page: pageNum,
+                  x,
+                  y,
+                  newText, 
+                  fontSize, 
+                  width, 
+                  height, 
+                  fontFamily,
+                  fontWeight,
+                  fontStyle,
+                  textDecoration,
+                  fill,
+                } = edit;
+          const obj = {page: pageNum,
+                  x,
+                  y,
+                  newText, 
+                  fontSize, 
+                  width, 
+                  height, 
+                  fontFamily,
+                  fontWeight,
+                  fontStyle,
+                  textDecoration,
+                  fill,}
+          console.log(obj)
           // pdf-lib is 0-indexed
           const page = pages[pageNum - 1]; 
           const { height: pageHeight } = page.getSize();
@@ -61,7 +83,10 @@ async function editorController(req, res) {
             // y: backendY + (height * 0.1), // Slight adjustment for baseline
             y:y,
             size: fontSize,
-    
+            fontWeight: fontWeight,
+            fontStyle: fontStyle,
+            textDecoration: textDecoration,
+            fill: fill,
             fontFamily: fontFamily,
             color: rgb(0, 0, 0), // Black
           });

@@ -214,7 +214,7 @@ const PdfViewer: React.FC = () => {
         textDecoration: item.textDecoration,
         fill: item.fill,
       }));
-
+      console.log("Edits to save:", edits);
       // 1. Use FormData instead of a JSON body
       const formData = new FormData();
       formData.append("pdf", originalFile); // The File object from your state

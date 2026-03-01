@@ -32,7 +32,7 @@ function Home() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className='text-white text-3xl font-bold bg-[#0c0d13] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] w-[90vw] lg:w-[60vw] h-full rounded-4xl p-8 grid 
+        className='text-white text-3xl font-bold font-mono w-[90vw] lg:w-[90vw] h-full rounded-4xl p-8 grid 
           grid-cols-1 
           md:grid-cols-2 
           gap-8 border border-white/10'

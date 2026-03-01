@@ -11,8 +11,6 @@ import {
     ListTodoIcon,
    
     MessageSquarePlusIcon,
-    MinusIcon,
-    PlusIcon,
     Printer,
     Redo2Icon,
     RemoveFormattingIcon,
@@ -25,13 +23,8 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Separator } from "@/components/ui/separator";
-import {
-    DropdownMenu,
-   
-    DropdownMenuTrigger,
-    DropdownMenuContent
-} from "@/components/ui/dropdown-menu";
-import * as React from "react";
+
+
 
 
 import { useState } from "react";
@@ -50,83 +43,83 @@ interface ToolbarProps {
   onUpdate: (updates: Partial<any>) => void; // Function to push changes back
 }
 
-const FontSizeButton=()=>{
+// const FontSizeButton=()=>{
     
-    const currentFontSize = "16px";
-    const [fontSize, setFontSize] = useState(currentFontSize);
-    const[inputValue,setInputValue] = useState(fontSize);
-    const [isEditing, setIsEditing] = useState(false);
+//     const currentFontSize = "16px";
+//     const [fontSize, setFontSize] = useState(currentFontSize);
+//     const[inputValue,setInputValue] = useState(fontSize);
+//     const [isEditing, setIsEditing] = useState(false);
 
-    const updateFontSize = (newSize:string)=>{
-        const size = parseInt(newSize);
-        if(!isNaN(size) && size>0){
+//     const updateFontSize = (newSize:string)=>{
+//         const size = parseInt(newSize);
+//         if(!isNaN(size) && size>0){
             
-            setFontSize(newSize);
-            setInputValue(newSize);
-            setIsEditing(false);
-        }
-    }
-    const handleInputChange = (e:React.ChangeEvent<HTMLInputElement>)=>{
-        setInputValue(e.target.value);
-    }
-    const handleInputBlur = ()=>{
-        updateFontSize(inputValue);
-    }
-    const handleKeyDown = (e:React.KeyboardEvent<HTMLInputElement>)=>{
-        if(e.key === "Enter"){e.preventDefault();
-        updateFontSize(inputValue);
-        }
-    }
-    const increment =()=>{
-        const newSize = parseInt(fontSize) +1;
-        updateFontSize(newSize.toString());
-    }
-    const decrement =()=>{
-        const newSize = parseInt(fontSize) -1;
-        if(newSize>0){updateFontSize(newSize.toString());}
-    }
+//             setFontSize(newSize);
+//             setInputValue(newSize);
+//             setIsEditing(false);
+//         }
+//     }
+//     const handleInputChange = (e:React.ChangeEvent<HTMLInputElement>)=>{
+//         setInputValue(e.target.value);
+//     }
+//     const handleInputBlur = ()=>{
+//         updateFontSize(inputValue);
+//     }
+//     const handleKeyDown = (e:React.KeyboardEvent<HTMLInputElement>)=>{
+//         if(e.key === "Enter"){e.preventDefault();
+//         updateFontSize(inputValue);
+//         }
+//     }
+//     const increment =()=>{
+//         const newSize = parseInt(fontSize) +1;
+//         updateFontSize(newSize.toString());
+//     }
+//     const decrement =()=>{
+//         const newSize = parseInt(fontSize) -1;
+//         if(newSize>0){updateFontSize(newSize.toString());}
+//     }
 
-    return(
-        <div className="flex items-center gap-x-0.5">
-            <button 
-            onClick={decrement}
-            className="
-                h-7 w-7 shrink-0 flex  items-center justify-center rounded-sm hover:bg-neutral-200/80">
-                <MinusIcon  className="size-4"/>
-            </button>
-            {isEditing?(
-                <input
-            className="
-                h-7 w-10 text-sm text-center border border-neutral-400 rounded-sm bg-transparent focus:outline focus:ring-0"
-                type="text"
+//     return(
+//         <div className="flex items-center gap-x-0.5">
+//             <button 
+//             onClick={decrement}
+//             className="
+//                 h-7 w-7 shrink-0 flex  items-center justify-center rounded-sm hover:bg-neutral-200/80">
+//                 <MinusIcon  className="size-4"/>
+//             </button>
+//             {isEditing?(
+//                 <input
+//             className="
+//                 h-7 w-10 text-sm text-center border border-neutral-400 rounded-sm bg-transparent focus:outline focus:ring-0"
+//                 type="text"
                
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                onKeyDown={handleKeyDown} 
-                value={inputValue}
-                autoFocus
-                />
-            ):(
+//                 onChange={handleInputChange}
+//                 onBlur={handleInputBlur}
+//                 onKeyDown={handleKeyDown} 
+//                 value={inputValue}
+//                 autoFocus
+//                 />
+//             ):(
 
-                <button  
-                onClick={()=>{
-                    setIsEditing(true);
-                    setFontSize(currentFontSize)
-                }}
-                className="
-                h-7 w-10 text-sm border border-neutral-400 rounded-sm bg-transparent cursor-text ">{currentFontSize}
-                </button>
+//                 <button  
+//                 onClick={()=>{
+//                     setIsEditing(true);
+//                     setFontSize(currentFontSize)
+//                 }}
+//                 className="
+//                 h-7 w-10 text-sm border border-neutral-400 rounded-sm bg-transparent cursor-text ">{currentFontSize}
+//                 </button>
 
-            )}
-            <button 
-            onClick={increment}
-            className="
-                h-7 w-7 shrink-0 flex  items-center justify-center rounded-sm hover:bg-neutral-200/80">
-                <PlusIcon  className="size-4"/>
-            </button>
-        </div>
-    )
-}
+//             )}
+//             <button 
+//             onClick={increment}
+//             className="
+//                 h-7 w-7 shrink-0 flex  items-center justify-center rounded-sm hover:bg-neutral-200/80">
+//                 <PlusIcon  className="size-4"/>
+//             </button>
+//         </div>
+//     )
+// }
 
 interface TextColorButtonProps {
   value?: string;

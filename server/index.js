@@ -1,5 +1,6 @@
 const editorController = require('./controller/editor.js');
 const express = require('express');
+const PdfToDocxController = require('./controller/PdfToDocxController.js');
 
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +32,6 @@ app.post('/api/compress-pdf', upload.single('pdf'), (req, res) => {
   res.setHeader('Content-Disposition', 'attachment; filename="compressed.pdf"');
   res.send(req.file.buffer);
 });
-
+app.post('/api/convertToDoc', upload.single('pdf'),PdfToDocxController);
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

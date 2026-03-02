@@ -4,6 +4,7 @@ import Home from './home'
 import PdfViewer from './features/PdfViewer'
 import CompressPDF from './features/compresspdf'
 import MergePDF from './features/mergepdf'
+import PdfToDocx from './features/pdfToDocx'
 
 function App() {
  
@@ -18,7 +19,7 @@ function App() {
           <Route path="/editpdf" element={<PdfViewer />} />
           <Route path="/compresspdf" element={<CompressPDF />} />
           <Route path="/mergepdf" element={<div className='text-white mt-14'><MergePDF /></div>} />
-          <Route path="/pdftoword" element={<div className='text-white mt-14'>PDF to Word coming soon...</div>} />
+          <Route path="/pdftoword" element={<div className='text-white mt-14'><PdfToDocx /></div>} />
         </Routes>
 
         </main>

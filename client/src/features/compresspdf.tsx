@@ -11,28 +11,51 @@ function CompressPDF() {
     }
   }
 
-  const handleCompress = async()=>{
-    if(!inputFile) return;
-    const formData = new FormData;
-    formData.append('pdf',inputFile)
+  const handleCompress = async () => {
+    if (!inputFile) {
+        alert("Please select a PDF file first.");
+        return;
+    }
 
-    const response = await fetch('http://localhost:5000/api/compress-pdf',{
-      method:"POST",
-      body:formData
-    });
-    const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
-      const newtab = window.open(downloadUrl, '_blank');
-      if(!newtab){
+    try {
+        const formData = new FormData();
+        // NOTE: Make sure the key 'pdf' matches what your Express server expects!
+        formData.append('pdf', inputFile);
+
+        const response = await fetch('http://localhost:5000/api/compressPdf', {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Compression failed on server");
+
+        // 1. Get the response as a Blob
+        const blob = await response.blob();
+
+        // 2. Create a temporary URL for the blob
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        // 3. Create a hidden <a> tag to trigger the download
         const link = document.createElement('a');
-        link.href =downloadUrl;
-        link.download = `edited_${inputFile.name}.pdf`;
+        link.href = downloadUrl;
+        
+        // 4. Set the file name
+        const fileName = inputFile.name.replace('.pdf', '.docx');
+        link.setAttribute('download', fileName);
+
+        // 5. Append to body, click, and remove
+        document.body.appendChild(link);
         link.click();
+        link.parentNode?.removeChild(link);
 
-      }
+        // 6. Clean up the URL object to save memory
+        window.URL.revokeObjectURL(downloadUrl);
 
-  }
-
+    } catch (error) {
+        console.error("Error converting PDF to Word:", error);
+        alert("An error occurred while converting the file.");
+    }
+}
   return (
     <div>
       <div>

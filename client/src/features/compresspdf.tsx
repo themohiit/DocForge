@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react'
-
+import { Spinner } from "@/components/ui/spinner"
 function CompressPDF() {
   const [inputFile, setinputFile]= useState<File |null>(null)
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange=(e:React.ChangeEvent<HTMLInputElement>)=>{
     if(e.target.files && e.target.files.length > 0 && e.target.files.length <= 1){
@@ -16,13 +16,13 @@ function CompressPDF() {
         alert("Please select a PDF file first.");
         return;
     }
-
+    setIsLoading(true); // 1. Start Spinner
     try {
         const formData = new FormData();
         // NOTE: Make sure the key 'pdf' matches what your Express server expects!
         formData.append('pdf', inputFile);
 
-        const response = await fetch('http://localhost:5000/api/compressPdf', {
+        const response = await fetch('https://docforge-2.onrender.com/api/compressPdf', {
             method: "POST",
             body: formData
         });
@@ -55,6 +55,9 @@ function CompressPDF() {
         console.error("Error converting PDF to Word:", error);
         alert("An error occurred while converting the file.");
     }
+    finally {
+      setIsLoading(false); // 3. Stop Spinner (works for success AND error)
+    }
 }
   return (
     <div>
@@ -67,7 +70,8 @@ function CompressPDF() {
                  file:text-sm file:font-semibold 
                  file:bg-blue-50 file:text-blue-700 
                  hover:file:bg-blue-100 cursor-pointer"/>
-                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCompress}>Compress</button>
+                
+                 <button className="bg-yellow-600  hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onClick={handleCompress}>{isLoading ? <Spinner className="h-4 w-4" /> : "Upload & Compress"}</button>
           </div>
       </div>
     </div>

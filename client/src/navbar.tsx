@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // For Mobile
-import { Menu, User } from "lucide-react" // Icons
+import { Menu} from "lucide-react" // Icons
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { Link } from "react-router-dom"
 

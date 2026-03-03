@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // For Mobile
-import { Menu } from "lucide-react" // Icons
+import { Menu, User } from "lucide-react" // Icons
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { Link } from "react-router-dom"
 
 export default function Navbar() {
@@ -40,7 +41,13 @@ export default function Navbar() {
 
         {/* 3. ACTIONS & MOBILE TOGGLE */}
         <div className="flex items-center gap-2">
-           <Button size='sm'  variant="ghost" className=" md:flex">Sign In</Button>
+          <SignedOut>
+              <Button size='sm' variant="ghost" className=" text-white hover:bg-yellow-700"><SignInButton mode="redirect" /></Button>
+              
+          </SignedOut>
+          <SignedIn>
+            <UserButton/>
+          </SignedIn>
            <Button size='sm' variant="ghost" className="lg:bg-yellow-600  text-white ">Get Started</Button>
            
            {/* Mobile Trigger (Sheet) */}

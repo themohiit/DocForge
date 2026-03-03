@@ -6,7 +6,7 @@ const CompressorHandler = async (req, res) =>{
     formData.append('file', req.file.buffer, {filename: req.file.originalname});
     const powerLevel = 2; // Default to 100 if not provided
 
-    try{const response = await axios.post(`http://0.0.0.0:8000/compress?power=${powerLevel}`,formData, {
+    try{const response = await axios.post(`http://127.0.0.1:8000/compress?power=${powerLevel}`,formData, {
         headers: formData.getHeaders(),
         responseType: 'stream'
     });

@@ -22,5 +22,5 @@ const upload = multer({ storage });
 app.post('/api/save-pdf', upload.single('pdf'),editorController);
 app.post('/api/compressPdf', upload.single('pdf'), compressorHandler);
 app.post('/api/convertToDoc', upload.single('pdf'),PdfToDocxController);
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

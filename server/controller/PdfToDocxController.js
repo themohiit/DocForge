@@ -8,7 +8,7 @@ const PdfToDocxController = async (req, res) => {
     // Assuming you use 'multer' to handle the incoming PDF in Express
     formData.append('file', req.file.buffer, { filename: req.file.originalname });
 
-    const response = await axios.post('http://0.0.0.0:8000/convert', formData, {
+    const response = await axios.post('http://127.0.0.1:8000/convert', formData, {
         headers: formData.getHeaders(),
         responseType: 'stream' // Best for Linux performance: stream the file
     });

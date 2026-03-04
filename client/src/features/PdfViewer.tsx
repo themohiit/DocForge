@@ -86,22 +86,32 @@ const PdfViewer: React.FC = () => {
     }
   }, [editingText]);
 
-  const uploadFile = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+const uploadFile = async (e: ChangeEvent<HTMLInputElement>) => {
+  
+  const files = e.target.files;
 
-    // 1. Store the actual File object in a ref or state to use later for Export
-    setOriginalFile(file);
+  if (!files || files.length === 0) return;
 
-    // 2. Create a local URL for PDF.js to read
-    const url = URL.createObjectURL(file);
-    setFileUrl(url);
+  const file = files[0];
 
-    // 3. (Optional) Clear old data
-    setTextItems([]);
+  if (files.length > 1 || file.type !== 'application/pdf') {
+    alert("Please select exactly one PDF file.");
+    e.target.value = ''; 
+    return;
+  }
 
-    console.log("File loaded locally for editing");
-  };
+  
+  setOriginalFile(file);
+
+ 
+  const url = URL.createObjectURL(file);
+  setFileUrl(url);
+
+ 
+  setTextItems([]);
+
+  console.log("File loaded locally for editing:", file.name);
+};
 
   const getSafeFont = (pdfFontName: string) => {
     if (!pdfFontName) return "sans-serif";

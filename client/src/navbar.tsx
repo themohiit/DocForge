@@ -67,7 +67,6 @@ export default function Navbar() {
                       className="text-sm font-medium transition-colors hover:scale-105 hover:text-grey "
                     >PDF to Word</Link>
         </div>
-
         {/* 3. ACTIONS & MOBILE TOGGLE */}
         <div className="flex items-center gap-2">
           <SignedOut>
@@ -77,7 +76,7 @@ export default function Navbar() {
           <SignedIn>
             <UserButton/>
           </SignedIn>
-           <BuyMeACoffee />
+           <BuyMeACoffee/>
            
            {/* Mobile Trigger (Sheet) */}
            <div className="md:hidden">
@@ -91,7 +90,7 @@ export default function Navbar() {
     <SheetContent side="right" className="bg-black/95 backdrop-blur-xl border-l border-white/10 text-white p-0 flex flex-col">
       {/* Header/Logo section inside Sidebar */}
       <div className="p-6 border-b border-white/10">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-700 bg-clip-text text-transparent">
+        <h2 className="text-xl font-bold bg-linear-to-r from-yellow-400 to-yellow-700 bg-clip-text text-transparent">
           DocForge
         </h2>
       </div>
@@ -126,7 +125,7 @@ export default function Navbar() {
       </div>
     </SheetContent>
   </Sheet>
-</div>
+          </div>
         </div>
 
       </div>

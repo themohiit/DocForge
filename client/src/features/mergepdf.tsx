@@ -8,12 +8,19 @@ function MergePDF() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
+      
+      if (filesArray.length > 1 && filesArray.every(file => file.type === 'application/pdf')) {
+        setInputFiles(filesArray);
+      }
       if (filesArray.length < 2) {
         alert("Please select at least two PDF files.");
+        e.target.value = ''; 
+        
         return;
       }
-      if (filesArray.length > 1) {
-        setInputFiles(filesArray);
+      else{
+        alert("Please select only PDF files.");
+        e.target.value = ''; 
       }
     }
   };
@@ -51,8 +58,9 @@ function MergePDF() {
 
   return (
     <div>
-      <div className="container mx-auto p-4 mt-14 w-[90vw] lg:w-[60vw] flex lg:flex-row flex-col gap-4 ">
-        <h1 className="text-2xl font-bold text-white">Merge PDF</h1>
+      <div className="container mx-auto p-4 mt-14 w-[90vw] lg:w-[60vw] ">
+        <h1 className="text-2xl font-bold text-white mb-2">Merge PDF</h1>
+        <div className=' flex lg:flex-row flex-col gap-4'>
         <input
           type="file"
           accept=".pdf"
@@ -65,8 +73,8 @@ function MergePDF() {
                  file:bg-blue-50 file:text-blue-700 
                  hover:file:bg-blue-100 cursor-pointer"
         />
-        <button className="bg-yellow-600  hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onClick={handleMerge}>{isLoading ? <Spinner className="h-4 w-4" /> : "Merge PDFs"}</button>
-        
+        <button className="bg-yellow-600  hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded " onClick={handleMerge}>{isLoading ? <Spinner className="h-4 w-4" /> : "Merge PDFs"}</button>
+        </div>
       </div>
     </div>
   );

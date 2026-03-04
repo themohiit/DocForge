@@ -39,19 +39,19 @@ function Home() {
       >
         {/* Wrap each Card in a motion.div to apply the variant */}
         <motion.div variants={cardVariants}>
-          <Card feature='Edit PDF' description='Lorem ipsum dolor sit amet...' link='/editpdf'/>
+          <Card feature='Edit PDF' description='Edit text direct in your PDFs with ease. change colors, fonts, and fontfamily with just a few clicks.' link='/editpdf'/>
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card feature='Compress PDF' description='Lorem ipsum dolor sit amet...' link='/compresspdf' button='Coming soon...' />
+          <Card feature='Compress PDF' description='Reduce file size without compromising quality.' link='/compresspdf' button='Try now' />
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card feature='Merge PDF' description='Lorem ipsum dolor sit amet...' link='/mergepdf'  button='Coming soon...'/>
+          <Card feature='Merge PDF' description='Combine multiple PDFs into one seamless document.' link='/mergepdf'  button='Try now'/>
         </motion.div>
 
         <motion.div variants={cardVariants}>
-          <Card feature='PDF to Word' description='Lorem ipsum dolor sit amet...' link='/pdftoword' button='Coming soon...'/>
+          <Card feature='PDF to Word' description='Convert PDFs to editable Word documents.' link='/pdftoword' button='Try now'/>
         </motion.div>
       </motion.div>
     </div>

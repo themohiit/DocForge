@@ -7,10 +7,17 @@ function PdfToDocx() {
     const [inputFile, setInputFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const handleInputChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
-        if(e.target.files && e.target.files.length > 0 && e.target.files.length <= 1){
+        if(e.target.files && e.target.files.length > 0 && e.target.files.length <= 1 && e.target.files[0].type === 'application/pdf'){
             setInputFile(e.target.files[0])
         }
-        else(alert("Please select a single PDF file."));
+        else if(e.target.files && e.target.files[0].type !== 'application/pdf'){
+            alert("Please select a PDF file.");
+            e.target.value = ''; 
+        }
+        else{
+            alert("Please select only one PDF file.");
+            e.target.value = ''; 
+        }
 
     }
 
@@ -66,8 +73,9 @@ const handleConvert = async () => {
 
   return (
     <div>
-      <div className="container mx-auto p-4 mt-14 w-[90vw] lg:w-[60vw] flex lg:flex-row flex-col gap-4 ">
-        <h1 className="text-2xl font-bold text-white">Convert Pdf to Word</h1>
+      <div className="container mx-auto p-4 mt-14 w-[90vw] lg:w-[60vw]  ">
+        <h1 className="text-2xl font-bold text-white mb-2">Convert Pdf to Word</h1>
+        <div className='flex lg:flex-row flex-col gap-4'>
         <input
           type="file"
           accept=".pdf"
@@ -81,6 +89,7 @@ const handleConvert = async () => {
                  hover:file:bg-blue-100 cursor-pointer"
         />
         <button className="bg-yellow-600  hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onClick={handleConvert}>{isLoading ? <Spinner className="h-4 w-4" /> : "Upload & Convert"}</button>
+        </div>
       </div>
     </div>
   )

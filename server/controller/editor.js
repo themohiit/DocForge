@@ -42,14 +42,34 @@ async function editorController(req, res) {
             return await doc.embedFont(fontName);
         }
 
-        function hexToRgb(hex = "#000000") {
-            // Remove # if present
-            const cleanHex = hex.replace('#', '');
-            const r = parseInt(cleanHex.slice(0, 2), 16) / 255;
-            const g = parseInt(cleanHex.slice(2, 4), 16) / 255;
-            const b = parseInt(cleanHex.slice(4, 6), 16) / 255;
-            return rgb(r, g, b);
-        }
+       function hexToRgb(hex = "#000000") {
+    // 1. Fallback for undefined, null, or non-string values
+    if (!hex || typeof hex !== 'string') hex = "#000000";
+    
+    // 2. Remove # and handle short hex codes (e.g., #000)
+    let cleanHex = hex.replace('#', '');
+    
+    if (cleanHex.length === 3) {
+        cleanHex = cleanHex.split('').map(char => char + char).join('');
+    }
+
+    // 3. Ensure we have exactly 6 characters now
+    if (cleanHex.length !== 6) {
+        console.warn(`Invalid hex color received: ${hex}. Defaulting to black.`);
+        return rgb(0, 0, 0);
+    }
+
+    const r = parseInt(cleanHex.slice(0, 2), 16) / 255;
+    const g = parseInt(cleanHex.slice(2, 4), 16) / 255;
+    const b = parseInt(cleanHex.slice(4, 6), 16) / 255;
+
+    // 4. Final safety check: if any value is NaN, return black
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+        return rgb(0, 0, 0);
+    }
+
+    return rgb(r, g, b);
+}
 
         // --- MAIN EDIT LOOP ---
 

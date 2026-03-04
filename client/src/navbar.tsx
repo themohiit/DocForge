@@ -1,9 +1,23 @@
 import { Button } from "@/components/ui/button"
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // For Mobile
-import { Menu} from "lucide-react" 
+
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { Link } from "react-router-dom"
+import { Menu, FileEdit, FileArchive, Merge, FileType, Home } from "lucide-react";
+const MobileNavLink = ({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) => (
+  <Link 
+    to={to} 
+    className="flex items-center gap-4 px-3 py-4 rounded-xl transition-all duration-200 hover:bg-white/10 hover:translate-x-1 group"
+  >
+    <span className="text-yellow-500 group-hover:scale-110 transition-transform">
+      {icon}
+    </span>
+    <span className="text-base font-medium text-gray-200 group-hover:text-white">
+      {label}
+    </span>
+  </Link>
+);
 
 export default function Navbar() {
   return (
@@ -52,29 +66,52 @@ export default function Navbar() {
            
            {/* Mobile Trigger (Sheet) */}
            <div className="md:hidden">
-             <Sheet>
-               <SheetTrigger asChild>
-                 <Button variant="default"  className="bg-yellow-600 text-black hover:bg-yellow-700" size="icon"><Menu color="black"/></Button>
-               </SheetTrigger>
-               <SheetContent side="right" className="bg-black text-white">
-                 {/* Mobile Links go here */}
-                  <Link 
-                to="/editpdf" 
-                className="text-sm font-medium transition-colors hover:scale-105 hover:text-grey "
-              >Edit PDF</Link>
-           
-                <Link 
-                      to="/compresspdf" 
-                      className="text-sm font-medium transition-colors hover:scale-105 hover:text-grey "
-                    >Compress PDF</Link>
+  <Sheet>
+    <SheetTrigger asChild>
+      <Button variant="default" className="bg-yellow-500 text-black hover:bg-yellow-600 shadow-lg shadow-yellow-900/20" size="icon">
+        <Menu className="h-6 w-6" />
+      </Button>
+    </SheetTrigger>
+    
+    <SheetContent side="right" className="bg-black/95 backdrop-blur-xl border-l border-white/10 text-white p-0 flex flex-col">
+      {/* Header/Logo section inside Sidebar */}
+      <div className="p-6 border-b border-white/10">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-700 bg-clip-text text-transparent">
+          DocForge
+        </h2>
+      </div>
 
-                <Link 
-                      to="/mergepdf" 
-                      className="text-sm font-medium transition-colors hover:scale-105 hover:text-grey "
-                    >Merge PDF</Link>
-               </SheetContent>
-             </Sheet>
-           </div>
+      {/* Navigation Links */}
+      <nav className="flex-1 px-4 py-6 flex flex-col gap-2">
+        <MobileNavLink to="/" icon={<Home size={20} />} label="Home" />
+        
+        <div className="my-2 text-[10px] uppercase tracking-widest text-gray-500 font-bold px-3">Tools</div>
+        
+        <MobileNavLink to="/editpdf" icon={<FileEdit size={20} />} label="Edit PDF" />
+        <MobileNavLink to="/compresspdf" icon={<FileArchive size={20} />} label="Compress PDF" />
+        <MobileNavLink to="/mergepdf" icon={<Merge size={20} />} label="Merge PDF" />
+        <MobileNavLink to="/pdftoword" icon={<FileType size={20} />} label="PDF to Word" />
+      </nav>
+
+      {/* Footer section (Clerk Integration) */}
+      <div className="p-6 border-t border-white/10 bg-white/5">
+        <SignedIn>
+          <div className="flex items-center gap-3">
+            <UserButton afterSignOutUrl="/" />
+            <span className="text-sm font-medium text-gray-300">My Account</span>
+          </div>
+        </SignedIn>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="w-full bg-yellow-600 py-2 rounded-md font-bold text-black hover:bg-yellow-500 transition-all">
+              Sign In
+            </button>
+          </SignInButton>
+        </SignedOut>
+      </div>
+    </SheetContent>
+  </Sheet>
+</div>
         </div>
 
       </div>

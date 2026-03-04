@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // For Mobile
-
+import { Coffee } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { Link } from "react-router-dom"
 import { Menu, FileEdit, FileArchive, Merge, FileType, Home } from "lucide-react";
@@ -18,6 +18,21 @@ const MobileNavLink = ({ to, icon, label }: { to: string, icon: React.ReactNode,
     </span>
   </Link>
 );
+
+
+const BuyMeACoffee = () => {
+  return (
+    <a 
+      href="https://rzp.io/rzp/qNZMaBn" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold text-sm hover:bg-yellow-400 hover:shadow-[0_0_15px_rgba(234,179,8,0.4)] transition-all active:scale-95"
+    >
+      <Coffee size={16} strokeWidth={3} />
+      <span className="hidden sm:inline">Buy me a coffee</span>
+    </a>
+  );
+};
 
 export default function Navbar() {
   return (
@@ -62,7 +77,7 @@ export default function Navbar() {
           <SignedIn>
             <UserButton/>
           </SignedIn>
-           <Button size='sm' variant="ghost" className="lg:bg-yellow-600  text-white ">Get Started</Button>
+           <BuyMeACoffee />
            
            {/* Mobile Trigger (Sheet) */}
            <div className="md:hidden">

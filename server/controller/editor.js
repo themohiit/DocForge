@@ -85,7 +85,9 @@ async function editorController(req, res) {
 
             // 1. Get the actual Font Object
             const font = await getFontObject(pdfDoc, fontFamily, fontWeight, fontStyle);
-            const textColor = hexToRgb(fill);
+            console.log("fill:", fill);
+            if(typeof fill !== 'string') {
+            const textColor = hexToRgb(fill);}
 
             // 2. Erase old text area (White Rectangle)
             page.drawRectangle({
@@ -102,7 +104,7 @@ async function editorController(req, res) {
                 y: y,
                 size: fontSize,
                 font: font,
-                color: textColor,
+                color: textColor || fill,
             });
 
             // 4. Handle Underline manually

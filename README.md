@@ -1,4 +1,5 @@
-<img width="904" height="543" alt="image" src="https://github.com/user-attachments/assets/6444e366-f693-458f-b370-3056c5d6adfe" />
+<img width="1354" height="650" alt="image" src="https://github.com/user-attachments/assets/69700b5f-6430-41a1-904d-b0b8ba6851b7" />
+
 🚀 DocForge
 DocForge is a high-performance, full-stack PDF productivity suite. It combines a sleek, modern React frontend with a powerful hybrid backend (Node.js + Python) to offer professional-grade PDF editing, compression, and conversion tools—all within a single, streamlined interface.
 

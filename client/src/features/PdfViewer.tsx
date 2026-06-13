@@ -230,7 +230,7 @@ const uploadFile = async (e: ChangeEvent<HTMLInputElement>) => {
       formData.append("pdf", originalFile); // The File object from your state
       formData.append("edits", JSON.stringify(edits)); // The edit data as a string
 
-      const response = await fetch("https://docforge-2.onrender.com/api/save-pdf", {
+      const response = await fetch("http://localhost:5000/api/save-pdf", {
         method: "POST",
 
         body: formData,

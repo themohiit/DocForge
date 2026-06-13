@@ -9,7 +9,15 @@ async function editorController(req, res) {
         const pdfBuffer = req.file.buffer;
         const edits = JSON.parse(req.body.edits);
 
-        const pdfDoc = await PDFDocument.load(pdfBuffer);
+        let pdfDoc;
+        try {
+            pdfDoc = await PDFDocument.load(pdfBuffer);
+        } catch (e) {
+            if (e.message.includes('encrypted')) {
+                return res.status(400).json({ error: "Password-protected PDFs are not supported." });
+            }
+            throw e;
+        }
         const pages = pdfDoc.getPages();
 
         // --- HELPER FUNCTIONS ---
@@ -86,8 +94,8 @@ async function editorController(req, res) {
             // 1. Get the actual Font Object
             const font = await getFontObject(pdfDoc, fontFamily, fontWeight, fontStyle);
             console.log("fill:", fill);
-            if(typeof fill !== 'string') {
-            const textColor = hexToRgb(fill);}
+            const textColor = typeof fill === 'string' ? hexToRgb(fill) : fill;
+           
 
             // 2. Erase old text area (White Rectangle)
             page.drawRectangle({

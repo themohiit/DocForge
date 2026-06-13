@@ -12,7 +12,7 @@ function MergePDF() {
       if (filesArray.length > 1 && filesArray.every(file => file.type === 'application/pdf')) {
         setInputFiles(filesArray);
       }
-      if (filesArray.length < 2) {
+      else if (filesArray.length < 2) {
         alert("Please select at least two PDF files.");
         e.target.value = ''; 
         

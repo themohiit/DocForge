@@ -34,6 +34,17 @@ async def compress_pdf(
     with open(input_path, "wb") as buffer:
         buffer.write(await file.read())
 
+    # Check for encryption
+    try:
+        doc = fitz.open(input_path)
+        if doc.is_encrypted:
+            doc.close()
+            raise HTTPException(status_code=400, detail="Password-protected PDFs are not supported.")
+        doc.close()
+    except Exception as e:
+        if isinstance(e, HTTPException): raise e
+        pass # If fitz fails to open, GS might still handle it or fail later
+
     # Map user input to Ghostscript PDFSETTINGS
     quality_map = {
         1: "/screen",   # 72 dpi (smallest file)
@@ -69,20 +80,51 @@ async def compress_pdf(
 async def convert_pdf(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     # Generate a unique ID so users don't overwrite each other's files
     job_id = str(uuid.uuid4())
-    pdf_path = f"/tmp/{job_id}.pdf"  # Use Linux /tmp folder for speed
+    pdf_path = f"/tmp/{job_id}.pdf"
+    ocr_pdf_path = f"/tmp/{job_id}_ocr.pdf"
     docx_path = f"/tmp/{job_id}.docx"
 
     # Save uploaded file to Linux /tmp directory
     with open(pdf_path, "wb") as buffer:
         buffer.write(await file.read())
 
-    # Convert
-    cv = Converter(pdf_path)
-    cv.convert(docx_path)
-    cv.close()
+    # Check if PDF is encrypted or has text layer
+    try:
+        doc = fitz.open(pdf_path)
+        if doc.is_encrypted:
+            doc.close()
+            raise HTTPException(status_code=400, detail="Password-protected PDFs are not supported. Please remove the password and try again.")
+        
+        has_text = False
+        for page in doc:
+            if page.get_text().strip():
+                has_text = True
+                break
+        doc.close()
 
-    # Add a background task to delete the files 1 minute after sending
-    background_tasks.add_task(cleanup, [pdf_path, docx_path])
+        target_pdf = pdf_path
+        if not has_text:
+            # Perform OCR using ocrmypdf
+            # --skip-text is used if there's some text but it's mostly scanned
+            # For purely scanned, it will add a text layer
+            ocr_command = [
+                "ocrmypdf", "--skip-text", 
+                pdf_path, ocr_pdf_path
+            ]
+            subprocess.run(ocr_command, check=True)
+            target_pdf = ocr_pdf_path
+
+        # Convert
+        cv = Converter(target_pdf)
+        cv.convert(docx_path)
+        cv.close()
+
+    except Exception as e:
+        print(f"Error during conversion: {e}")
+        raise HTTPException(status_code=500, detail=f"PDF conversion failed: {str(e)}")
+
+    # Add a background task to delete the files after sending
+    background_tasks.add_task(cleanup, [pdf_path, ocr_pdf_path, docx_path])
 
     return FileResponse(
         path=docx_path,

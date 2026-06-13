@@ -32,7 +32,7 @@ const handleConvert = async () => {
         // NOTE: Make sure the key 'pdf' matches what your Express server expects!
         formData.append('pdf', inputFile);
 
-        const response = await fetch('https://docforge-2.onrender.com/api/convertToDoc', {
+        const response = await fetch('http://localhost:5000/api/convertToDoc', {
             method: "POST",
             body: formData
         });

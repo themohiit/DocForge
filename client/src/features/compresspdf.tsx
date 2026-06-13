@@ -28,7 +28,8 @@ function CompressPDF() {
         formData.append('pdf', inputFile);
         formData.append('powerLevel', powerLevel.toString());
 
-        const response = await fetch('http://localhost:5000/api/compressPdf', {
+        const baseUrl = import.meta.env.VITE_API_URL || 'https://docforge-2.onrender.com';
+        const response = await fetch(`${baseUrl}/api/compressPdf`, {
             method: "POST",
             body: formData
         });

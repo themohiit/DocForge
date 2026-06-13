@@ -31,8 +31,11 @@ async def compress_pdf(
     output_path = f"/tmp/{job_id}_compressed.pdf"
 
     # Save uploaded file
-    with open(input_path, "wb") as buffer:
-        buffer.write(await file.read())
+    try:
+        with open(input_path, "wb") as buffer:
+            buffer.write(await file.read())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save uploaded file: {str(e)}")
 
     # Check for encryption
     try:
@@ -43,7 +46,8 @@ async def compress_pdf(
         doc.close()
     except Exception as e:
         if isinstance(e, HTTPException): raise e
-        pass # If fitz fails to open, GS might still handle it or fail later
+        # If fitz fails to open, we'll try Ghostscript anyway but log it
+        print(f"Warning: PyMuPDF could not open PDF {input_path}: {e}")
 
     # Map user input to Ghostscript PDFSETTINGS
     quality_map = {
@@ -53,7 +57,7 @@ async def compress_pdf(
         4: "/prepress"  # 300 dpi (color preserved)
     }
     
-    gs_setting = quality_map.get(power)
+    gs_setting = quality_map.get(power, "/ebook")
 
     # Ghostscript Command
     gs_command = [
@@ -65,17 +69,19 @@ async def compress_pdf(
 
     try:
         # Run the compression
-        subprocess.run(gs_command, check=True)
+        result = subprocess.run(gs_command, capture_output=True, text=True, check=True)
     except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail="Ghostscript compression failed.")
+        print(f"Ghostscript error: {e.stderr}")
+        raise HTTPException(status_code=500, detail=f"Ghostscript compression failed: {e.stderr}")
 
     background_tasks.add_task(cleanup, [input_path, output_path])
 
     return FileResponse(
         path=output_path,
-        filename=file.filename.replace(".pdf", "_compressed.pdf"),
+        filename=file.filename.replace(".pdf", "_compressed.pdf") if file.filename else "compressed.pdf",
         media_type='application/pdf'
     )
+
 @app.post("/convert")
 async def convert_pdf(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     # Generate a unique ID so users don't overwrite each other's files
@@ -84,9 +90,12 @@ async def convert_pdf(background_tasks: BackgroundTasks, file: UploadFile = File
     ocr_pdf_path = f"/tmp/{job_id}_ocr.pdf"
     docx_path = f"/tmp/{job_id}.docx"
 
-    # Save uploaded file to Linux /tmp directory
-    with open(pdf_path, "wb") as buffer:
-        buffer.write(await file.read())
+    # Save uploaded file
+    try:
+        with open(pdf_path, "wb") as buffer:
+            buffer.write(await file.read())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save uploaded file: {str(e)}")
 
     # Check if PDF is encrypted or has text layer
     try:
@@ -104,30 +113,39 @@ async def convert_pdf(background_tasks: BackgroundTasks, file: UploadFile = File
 
         target_pdf = pdf_path
         if not has_text:
-            # Perform OCR using ocrmypdf
-            # --skip-text is used if there's some text but it's mostly scanned
-            # For purely scanned, it will add a text layer
+            print(f"No text layer found in {pdf_path}, performing OCR...")
             ocr_command = [
                 "ocrmypdf", "--skip-text", 
                 pdf_path, ocr_pdf_path
             ]
-            subprocess.run(ocr_command, check=True)
-            target_pdf = ocr_pdf_path
+            try:
+                subprocess.run(ocr_command, capture_output=True, text=True, check=True)
+                target_pdf = ocr_pdf_path
+            except subprocess.CalledProcessError as e:
+                print(f"OCR error: {e.stderr}")
+                # Fallback: try to convert without OCR if OCR fails, 
+                # or just fail if OCR is mandatory for scanned PDFs
+                raise HTTPException(status_code=500, detail=f"OCR failed: {e.stderr}")
 
         # Convert
-        cv = Converter(target_pdf)
-        cv.convert(docx_path)
-        cv.close()
+        try:
+            cv = Converter(target_pdf)
+            cv.convert(docx_path)
+            cv.close()
+        except Exception as e:
+            print(f"pdf2docx error: {e}")
+            raise HTTPException(status_code=500, detail=f"PDF to DOCX conversion failed: {str(e)}")
 
     except Exception as e:
-        print(f"Error during conversion: {e}")
-        raise HTTPException(status_code=500, detail=f"PDF conversion failed: {str(e)}")
+        if isinstance(e, HTTPException): raise e
+        print(f"General error during conversion: {e}")
+        raise HTTPException(status_code=500, detail=f"Conversion error: {str(e)}")
 
     # Add a background task to delete the files after sending
     background_tasks.add_task(cleanup, [pdf_path, ocr_pdf_path, docx_path])
 
     return FileResponse(
         path=docx_path,
-        filename=file.filename.replace(".pdf", ".docx"),
+        filename=file.filename.replace(".pdf", ".docx") if file.filename else "converted.docx",
         media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     )
